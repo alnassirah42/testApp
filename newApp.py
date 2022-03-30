@@ -24,7 +24,7 @@ startDate = col1.date_input(
      date(2020,9, 1))
 
 endDate = col2.date_input(
-     "select start date",
+     "select end date",
      date(2021, 9, 1),
      min_value=date(2018,1,1))
 
@@ -47,12 +47,15 @@ data_load_state = st.text("Loading data...")
 data = load_data(selected_stocks)
 data_load_state.text("Loading data...done!")
 
-st.subheader("Data")
 df = data
-if 'transactionDataStr' in data.columns:
+if 'transactionDateStr' in data.columns:
      df = data.drop(columns='transactionDateStr')
 
-st.dataframe(df.head(20),width=900)
+
+
+st.markdown(f"<h2 style='text-align: center;'>{df['stock name'].iloc[0]} </h2>", unsafe_allow_html=True)
+
+st.dataframe(df.drop(columns='stock name').head(20),width=900)
 
 plot_raw_data(data)
 # plot_tasi(tasi)
