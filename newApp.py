@@ -4,7 +4,7 @@ from datetime import date
 #from fbprophet.plot import plot_plotly 
 import calendar
 
-from plotly import graph_objs as go 
+
 import numpy as np 
 import datetime 
 import pandas as pd 
@@ -13,6 +13,7 @@ import json
 import matplotlib.pyplot as plt 
 from calendar import day_name
 
+from plotly import graph_objs as go 
 
 
 def plot_tasi(tasi):
@@ -58,6 +59,51 @@ def plot_raw_data(data):
 
 def plotForecast(forecast,data):
      forecast_fig = go.Figure()
+
+     forecast_fig.add_trace(go.Scatter(x = forecast['ds'],
+                                   y = forecast['yhat_lower'],
+                                   fill=None,
+                                   mode='lines',
+                                   line_color='lightblue',
+                                   showlegend = False,
+                                   hoverinfo='skip'
+                              ))
+     forecast_fig.add_trace(go.Scatter(x = forecast['ds'],
+                                   y = forecast['yhat_upper'],
+
+                                   fill='tonexty', # fill area between trace0 and trace1
+                                   mode='lines',
+                                   line_color='lightblue',
+                                   showlegend=False,
+                                   hoverinfo='skip'))
+
+
+
+     forecast_fig.add_trace(go.Scatter(x = data['transactionDateStr'],
+                                   y = data['lastTradePrice'],
+                                   name = 'actual',
+                                   line_color='black'
+                                   )
+                    )
+     forecast_fig.add_trace(go.Scatter(x = forecast['ds'],
+                                   y = forecast['yhat'].round(2),
+                                   name = 'forecast',
+                                   line_color='blue',
+                                   )
+                    )
+
+     forecast_fig.layout.update(title_text = data['stock name'].iloc[0],title_x=0.5,
+                         xaxis_rangeslider_visible=True)
+     forecast_fig.update_traces(mode="lines", 
+                              hovertemplate=None)
+     
+     forecast_fig.update_layout(hovermode="x unified")
+
+     st.plotly_chart(forecast_fig)
+
+
+
+
 @st.cache
 def getTASI(startDate,endDate,start):
     startDate = startDate.replace('-','/')
@@ -99,12 +145,77 @@ def getSymbols():
       'Cookie': 'BIGipServerSaudiExchange.sa.app~SaudiExchange.sa_pool=1560223660.20480.0000; TS0155930d=0102d17fad65000806277ea912393fce0b6b4a9fe149650b61229347fbb2f6c75182ce97619ee3dcbf5628a68ef5a982316ab039f312f9f2f30ee198bd1ec9ba38347821df'
     }
 
+    response = requests.request("GET", url, headers=headers, data=payload, files=files)
+
+    df = json.loads(response.text)
+    df = pd.DataFrame(df)
+    return df
+
+def fetchData(start,symbol,startDate,endDate,l=30):
+    
+    url = "https://www.saudiexchange.sa/wps/portal/tadawul/market-participants/issuers/issuers-directory/company-details/!ut/p/z1/pZJvT8IwEIc_zV73aDc2fFe7uc6NJQWKrG9MQQSS_QsOzfj0lmFiSGRivHeXPM9d7pdDCi2QKvX7bqObXVXq3PSZGj6nPGEcPByHwYwAHfpjNkkjDADoqQMwZt5gZEMCiTswQAiRGNsEBEHqT34YpS5QQfn8YW5QD__PB_s2H64Uhd_8zPjuNwBSjgxAmBC-gyF00BQppN7Wer_aisN636LMJuS0V12OBo59YwZx7DNj3jtfQF-0l8AP2fUCp3A6oOf6R6Q2ebU8f8K2aeo7Cyxo9Iv-OOSWSWdVFbUu22lbLCsDdbfVhZRycZy91sGEHxP6CYiftRU!/p0/IZ7_NHLCH082KGET30A6DMCRNI2086=CZ6_NHLCH082KGET30A6DMCRNI2000=NJhistoricalPerformance=/"
+
+    payload={'startDate': startDate,
+    'toDate': endDate,
+    'start': str(start),
+    'length': str(l),
+    'symbol': str(symbol),
+    'draw': '1'}
+    files=[
+
+    ]
+    headers = {
+    'symbol': str(symbol),
+    'path': '/wps/portal/tadawul/market-participants/issuers/issuers-directory/company-details/!ut/p/z1/pZJvT8IwEIc_zV73aDc2fFe7uc6NJQWKrG9MQQSS_QsOzfj0lmFiSGRivHeXPM9d7pdDCi2QKvX7bqObXVXq3PSZGj6nPGEcPByHwYwAHfpjNkkjDADoqQMwZt5gZEMCiTswQAiRGNsEBEHqT34YpS5QQfn8YW5QD__PB_s2H64Uhd_8zPjuNwBSjgxAmBC-gyF00BQppN7Wer_aisN636LMJuS0V12OBo59YwZx7DNj3jtfQF-0l8AP2fUCp3A6oOf6R6Q2ebU8f8K2aeo7Cyxo9Iv-OOSWSWdVFbUu22lbLCsDdbfVhZRycZy91sGEHxP6CYiftRU!/p0/IZ7_NHLCH082KGET30A6DMCRNI2086=CZ6_NHLCH082KGET30A6DMCRNI2000=NJhistoricalPerformance=/',
+    'Authority': 'www.saudiexchange.sa',
+    'Referer': f'https://www.saudiexchange.sa/wps/portal/tadawul/market-participants/issuers/issuers-directory/company-details/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8zi_Tx8nD0MLIy83V1DjA0czVx8nYP8PI0MDAz0I4EKzBEKDEJDLYEKjJ0DA11MjQzcTfXDCSkoyE7zBAC-SKhH/?companySymbol={symbol}',
+    'scheme': 'https',
+    'Cookie': 'BIGipServerSaudiExchange.sa.app~SaudiExchange.sa_pool=1560223660.20480.0000; TS0155930d=0102d17fad65000806277ea912393fce0b6b4a9fe149650b61229347fbb2f6c75182ce97619ee3dcbf5628a68ef5a982316ab039f312f9f2f30ee198bd1ec9ba38347821df'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload, files=files)
+
+    return response.text
+
+def getDataFromSymbol(symbol,startDate=None,toDate=None):
+    if startDate is None:
+        startDate = datetime.datetime(datetime.datetime.now().year,1,1).strftime('%Y-%m-%d')
+    if toDate is None: 
+        toDate = datetime.datetime.now().strftime('%Y-%m-%d')
+        
+    days = (pd.to_datetime(toDate)-pd.to_datetime(startDate)).days
+    df = []
+    length = 30;
+    print(f'fetching symbol {symbol} data from {startDate} to {toDate}')
+    for start in range(0,days,length):
+        # resp = fetchData(symbol,startDate,toDate,start,length)
+        resp = fetchData(start,symbol,startDate,toDate,length)
+        respjson = json.loads(resp)
+        df_temp = pd.DataFrame(respjson['data'])
+        df.append(df_temp)
+    
+    df = pd.concat(df)
+    df.insert(0,'symbol', symbol)
+    if len(df) > 0:
+        df['transactionDateStr'] = pd.to_datetime(df['transactionDateStr'])
+        df.insert(1,'day',df['transactionDateStr'].apply(lambda v: day_name[v.weekday()]))
+    else:
+        print(symbol,'does not have data')
+    return df.reset_index()
 
 
-sym_df = st.cache(getSymbols)()
+
+
+
+
+
+
+
+
+sym_df = getSymbols()#st.cache(getSymbols)()
 # tasi = getTasiIndex('2022-01-01','2022-03-01')
 
-#sym_df = sym_df.drop(columns='bond_type').dropna()
+sym_df = sym_df.drop(columns='bond_type').dropna()
 st.title("stock display app")
 
 stocks = sym_df['companyNameAR'].values
@@ -142,3 +253,30 @@ data = load_data(selected_stocks)
 data_load_state.text("Loading data...done!")
 
 st.subheader("Data")
+df = data
+if 'transactionDataStr' in data.columns:
+     df = data.drop(columns='transactionDateStr')
+
+st.dataframe(df.head(20),width=900)
+
+plot_raw_data(data)
+# plot_tasi(tasi)
+
+@st.cache
+def forecastFunc(data):
+     m = Prophet()
+     df_train = data[['transactionDateStr','lastTradePrice']]
+     df_train.rename(columns={'transactionDateStr' : "ds",
+                              "lastTradePrice"     : "y" 
+                              },inplace=True)
+
+     m.fit(df_train)
+
+     future = m.make_future_dataframe(periods=period)
+     forecast = m.predict(future)
+     forecast.insert(1,'Day',forecast['ds'].apply(lambda v: calendar.day_name[v.weekday()]))
+     
+     return m,forecast
+
+
+
