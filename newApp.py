@@ -53,7 +53,7 @@ if 'transactionDateStr' in data.columns:
 
 
 
-st.markdown(f"<h2 style='text-align: center;'>{df['stock name'].iloc[0]} </h2>", unsafe_allow_html=True)
+st.markdown(f"<h3 style='text-align: center;'>{df['stock name'].iloc[0]} </h3>", unsafe_allow_html=True)
 
 st.dataframe(df.drop(columns='stock name').head(20),width=900)
 
