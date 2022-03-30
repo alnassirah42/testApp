@@ -104,7 +104,7 @@ def getSymbols():
 sym_df = st.cache(getSymbols)()
 # tasi = getTasiIndex('2022-01-01','2022-03-01')
 
-sym_df = sym_df.drop(columns='bond_type').dropna()
+#sym_df = sym_df.drop(columns='bond_type').dropna()
 st.title("stock display app")
 
 stocks = sym_df['companyNameAR'].values
